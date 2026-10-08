@@ -1,0 +1,127 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  PEGAWAI
+}
+
+enum Bidang {
+  SEKRETARIAT
+  PTSP
+  PM
+  PENGAWASAN
+}
+
+enum StatusJadwal {
+  BELUM_DIKERJAKAN
+  MENUNGGU_VERIFIKASI
+  SELESAI
+}
+
+enum JenisTiket {
+  PERMINTAAN_BARANG
+  LAPOR_KERUSAKAN
+}
+
+enum StatusTiket {
+  MENUNGGU
+  ACC
+  MAINTENANCE
+  SELESAI
+}
+
+enum StatusPBG {
+  BELUM_BAYAR
+  LUNAS
+}
+
+enum KategoriBarang {
+  ATK
+  ASET
+}
+
+enum TipeLog {
+  MASUK
+  KELUAR
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  name      String
+  nip       String?
+  role      Role     @default(PEGAWAI)
+  bidang    Bidang
+  jadwals   Jadwal[]
+  tikets    Tiket[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Jadwal {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  jenisTugas  String
+  lokasi      String
+  tanggal     DateTime
+  status      StatusJadwal @default(BELUM_DIKERJAKAN)
+  buktiUrl    String?
+  pdfUrl      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Barang {
+  id        Int            @id @default(autoincrement())
+  nama      String
+  stok      Int            @default(0)
+  limitStok Int            @default(5)
+  kategori  KategoriBarang
+  tikets    Tiket[]
+  logs      StokLog[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Tiket {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id])
+  jenis     JenisTiket
+  barangId  Int?
+  barang    Barang?     @relation(fields: [barangId], references: [id])
+  deskripsi String
+  status    StatusTiket @default(MENUNGGU)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model PBG {
+  id         Int       @id @default(autoincrement())
+  pemohon    String
+  skrd       String    @unique
+  nominal    Float
+  batasWaktu DateTime
+  noWa       String
+  status     StatusPBG @default(BELUM_BAYAR)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model StokLog {
+  id        Int      @id @default(autoincrement())
+  barangId  Int
+  barang    Barang   @relation(fields: [barangId], references: [id])
+  jumlah    Int
+  tipe      TipeLog
+  tanggal   DateTime @default(now())
+}
